@@ -1,0 +1,6 @@
+@FlexScaffoldSystems_HostAddress = http://localhost:5190
+
+GET {{FlexScaffoldSystems_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
