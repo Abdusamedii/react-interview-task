@@ -12,4 +12,11 @@ public class ApiResponse<T>
         Data = data;
         ErrorMessage = errorMessage;
     }
+
+
+    public static ApiResponse<T> Ok(T data, string? message = null)
+        => new ApiResponse<T>(true, data, message);
+
+    public static ApiResponse<T> Fail(string? errorMessage = null)
+        => new ApiResponse<T>(false, default, errorMessage);
 }

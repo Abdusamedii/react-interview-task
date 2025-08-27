@@ -44,7 +44,7 @@ public class ItemService
             .ToListAsync();
         if (!Items.Any())
         {
-            return new ApiResponse<List<Item>>(false, null, "No Job Sites Found");
+            return new ApiResponse<List<Item>>(false, null, "No Items Found");
         }
 
         return new ApiResponse<List<Item>>(true, Items, null);

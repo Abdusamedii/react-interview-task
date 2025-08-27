@@ -1,5 +1,4 @@
 using FlexScaffoldSystems.Data;
-using FlexScaffoldSystems.Entities;
 using FlexScaffoldSystems.Middlewares;
 using FlexScaffoldSystems.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +13,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ItemService>();
 builder.Services.AddScoped<JobSiteService>();
+builder.Services.AddScoped<ItemJobSiteService>();
+builder.Services.AddScoped<JobSiteCategoryService>();
 
 builder.Services.AddDbContext<DbContextConnection>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
