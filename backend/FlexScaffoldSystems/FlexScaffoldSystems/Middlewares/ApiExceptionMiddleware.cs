@@ -20,7 +20,6 @@ public class ApiExceptionMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
-
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 

@@ -1,5 +1,7 @@
 import type { JobSiteArrayType } from "../types/JobSiteArrayType";
-export default function JobSiteTableData({ jobSites } : JobSiteArrayType) {
+import { useNavigate } from "react-router-dom";
+export default function JobSiteTableData({ jobSites }: JobSiteArrayType) {
+  const navigate = useNavigate();
   const jobsites = jobSites || [{ id: 1, name: "Jobsite 1", status: 0 }];
   return (
     <div className="overflow-scroll">
@@ -20,7 +22,10 @@ export default function JobSiteTableData({ jobSites } : JobSiteArrayType) {
               key={index}
               className={index % 2 === 0 ? "bg-[#f8f8fa]" : "bg-white"}
             >
-              <td className="openSans font-semibold text-[#1264A3] text-center py-2 px-4">
+              <td
+                className="openSans font-semibold text-[#1264A3] text-center py-2 px-4 cursor-pointer"
+                onClick={() => navigate(`/jobsites/${job.id}`)}
+              >
                 {job.name}
               </td>
               <td className="openSans font-semibold flex justify-center items-center py-2 px-4">
