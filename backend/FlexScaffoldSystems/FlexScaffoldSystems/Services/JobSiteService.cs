@@ -69,11 +69,9 @@ public class JobSiteService
         }
     }
 
-    public async Task<ApiResponse<List<JobSite>>> GetAllJobSites(int pageNumber = 1)
+    public async Task<ApiResponse<List<JobSite>>> GetAllJobSites()
     {
         var jobSites = await _dbContext.JobSites.OrderBy(js => js.Name)
-            .Skip((pageNumber - 1) * 20) 
-            .Take(20)
             .ToListAsync();
         if (!jobSites.Any())
         {

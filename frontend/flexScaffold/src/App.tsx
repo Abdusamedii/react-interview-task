@@ -1,12 +1,16 @@
-import './App.css'
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes";
+import "./App.css";
+import { OverlayProvider } from "./context/OverlayContext";
 
 function App() {
-
   return (
-    <>
-     <h1 className='font-bold'>HELLO</h1>
-    </>
-  )
+    <BrowserRouter>
+      <OverlayProvider>
+        <AppRoutes />
+      </OverlayProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

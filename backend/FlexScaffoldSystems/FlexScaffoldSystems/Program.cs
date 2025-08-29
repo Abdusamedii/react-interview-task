@@ -16,6 +16,18 @@ builder.Services.AddScoped<JobSiteService>();
 builder.Services.AddScoped<ItemJobSiteService>();
 builder.Services.AddScoped<JobSiteCategoryService>();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // frontend URL
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 builder.Services.AddDbContext<DbContextConnection>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
                      throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
@@ -33,7 +45,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowFrontend");
 app.MapControllers();
 
 await SeedData.InitializeAsync(app.Services);

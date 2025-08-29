@@ -41,5 +41,5 @@ public class JobSiteCategoryController : Controller
             return BadRequest(result);
         }
         return Ok(result);
-    }
+    }   
 }

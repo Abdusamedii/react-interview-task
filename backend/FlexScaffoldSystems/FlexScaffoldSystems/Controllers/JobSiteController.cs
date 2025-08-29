@@ -29,9 +29,9 @@ public class JobSiteController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(int pageNumber)
+    public async Task<IActionResult> Get()
     {
-        var result = await _jobSiteService.GetAllJobSites(pageNumber);
+        var result = await _jobSiteService.GetAllJobSites();
         if (result.Success){return Ok(result);}
         return BadRequest(result);
     }
