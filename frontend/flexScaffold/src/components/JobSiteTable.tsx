@@ -15,6 +15,7 @@ function JobSiteTable({ jobSites }: { jobSites?: JobSite[] }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const [JobSitesList, setJobSitesList] = useState<JobSite[]>(jobSites || []);
+  const [filteredJobSites, setFilteredJobSites] = useState<JobSite[]>([]);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -22,6 +23,7 @@ function JobSiteTable({ jobSites }: { jobSites?: JobSite[] }) {
   useEffect(() => {
     if (jobSites) {
       setJobSitesList(jobSites);
+      setFilteredJobSites(jobSites);
     }
   }, [jobSites]);
   return (
@@ -37,7 +39,7 @@ function JobSiteTable({ jobSites }: { jobSites?: JobSite[] }) {
           </p>
         </div>
         <div className="flex gap-5 py-5">
-          <SearchInput />
+          <SearchInput JobSiteList={JobSitesList} setFilteredJobSites={setFilteredJobSites} />
           <div
             className="w-[150px] bg-[#71CF48] rounded-[5px] flex hover:bg-[#68C142] cursor-pointer"
             onClick={openModal}
@@ -54,7 +56,7 @@ function JobSiteTable({ jobSites }: { jobSites?: JobSite[] }) {
       {isOpen && (
         <ShowForm closeModal={closeModal} setJobSitesList={setJobSitesList} />
       )}
-      <JobSiteTableData jobSites={JobSitesList} />
+      <JobSiteTableData jobSites={filteredJobSites} />
     </div>
   );
 }
