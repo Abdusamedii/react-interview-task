@@ -8,7 +8,9 @@ import SearchInput from "./SearchInput";
 import JobSiteTableData from "./JobSiteTableData";
 import type { JobSite } from "../types/JobSiteType";
 import { useEffect, useState } from "react";
+// @ts-ignore
 import { createJobSite } from "../api/JobSites";
+import toast from "react-hot-toast";
 function JobSiteTable({ jobSites }: { jobSites?: JobSite[] }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -83,16 +85,24 @@ function ShowForm({
   };
 
   const CreateJobSite = async () => {
-    const data = {
-      name: name,
-      categoryIds: selectedCategories,
-      status: status === "" ? 0 : status,
-    };
-    const response = await createJobSite(data);
-    if (response.success && setJobSitesList) {
-      setJobSitesList((prev) => [...prev, response.data]);
+    try {
+      const data = {
+        name: name,
+        categoryIds: selectedCategories,
+        status: status === "" ? 0 : status,
+      };
+      const response = await createJobSite(data);
+      if (response.success && setJobSitesList) {
+        setJobSitesList((prev) => [...prev, response.data]);
+      }
+      console.log(response);
+    } catch (error) {
+      console.error("Error creating job site:", error);
+      toast.error(
+      // @ts-ignore
+        error.response?.data?.errorMessage || "Error creating item for job site"
+      );
     }
-    console.log(response);
     closeModal();
   };
 

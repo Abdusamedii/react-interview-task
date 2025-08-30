@@ -31,6 +31,11 @@ public class JobSiteService
             {
                 return new ApiResponse<JobSite>(false, null, "Name not approved");
             }
+            var jobSiteExists = await _dbContext.JobSites.AnyAsync(js => js.Name == createJobsite.Name);
+            if (jobSiteExists)
+            {
+                return new ApiResponse<JobSite>(false, null, "Job site with this name already exists");
+            }
 
             var jobSite = new JobSite() { Name = createJobsite.Name, Status = createJobsite.Status };
             await _dbContext.JobSites.AddAsync(jobSite);

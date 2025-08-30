@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 
 import CoreScaffoldImage from "../assets/svg/ItemGrid/CoreScaffold.svg";
+// @ts-ignore
 import { getJobSiteCategoriesById } from "../api/JobSites";
 import BackArrow from "../assets/svg/ItemGrid/BackArrow.svg";
 import { useEffect, useState } from "react";
@@ -8,10 +9,13 @@ import type { JobSiteCategory } from "../types/JobSiteCategory";
 import type { JobSiteItem } from "../types/JobSiteItem";
 import info from "../assets/svg/table/info.svg";
 import check from "../assets/svg/table/checkMark.svg";
+// @ts-ignore
 import { getItems } from "../api/Items";
 import type { CreateJobSiteItem } from "../types/CreateItemForJobSite";
+// @ts-ignore
 import { getAllItems } from "../api/Items";
 import type { Item } from "../types/Item";
+// @ts-ignore
 import { createItemForJobSite } from "../api/Items";
 import toast from "react-hot-toast";
 
@@ -54,6 +58,7 @@ function JobSite() {
         <CreateItem
           setToggleCreateItem={setToggleCreateItem}
           id={activeCategoryId}
+          // @ts-ignore
           setParentItems={setItems}
         />
       )}
@@ -248,6 +253,7 @@ function CreateItem({
       ]);
     } catch (error) {
       toast.error(
+        // @ts-ignore
         error.response?.data?.errorMessage || "Error creating item for job site"
       );
       console.error("Error creating item for job site:", error);

@@ -25,4 +25,13 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="publish\web.config" />
+      <_ContentIncludedByDefault Remove="publish\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="publish\appsettings.json" />
+      <_ContentIncludedByDefault Remove="publish\FlexScaffoldSystems.deps.json" />
+      <_ContentIncludedByDefault Remove="publish\FlexScaffoldSystems.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="publish\FlexScaffoldSystems.staticwebassets.endpoints.json" />
+    </ItemGroup>
+
 </Project>

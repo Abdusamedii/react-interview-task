@@ -26,8 +26,17 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontendWeb", policy =>
+    {
+        policy.WithOrigins("https://witty-bay-02ad12d03.2.azurestaticapps.net") // frontend URL
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
-
+/*https://witty-bay-02ad12d03.2.azurestaticapps.net/*/
 builder.Services.AddDbContext<DbContextConnection>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
                      throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
@@ -46,6 +55,7 @@ app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontendWeb");
 app.MapControllers();
 
 await SeedData.InitializeAsync(app.Services);

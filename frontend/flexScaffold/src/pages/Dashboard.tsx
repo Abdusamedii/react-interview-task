@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import JobSiteTable from "../components/JobSiteTable"
 import StatusOverview from "../components/StatusOverview"
+// @ts-ignore
 import { getJobSites } from "../api/JobSites";
 import type { JobSite } from "../types/JobSiteType";
 function Dashboard() {
