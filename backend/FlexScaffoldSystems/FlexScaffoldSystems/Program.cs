@@ -21,20 +21,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // frontend URL
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "https://witty-bay-02ad12d03.2.azurestaticapps.net"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontendWeb", policy =>
-    {
-        policy.WithOrigins("https://witty-bay-02ad12d03.2.azurestaticapps.net") // frontend URL
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+
 
 /*https://witty-bay-02ad12d03.2.azurestaticapps.net/*/
 builder.Services.AddDbContext<DbContextConnection>(opt =>
@@ -55,7 +50,6 @@ app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
-app.UseCors("AllowFrontendWeb");
 app.MapControllers();
 
 await SeedData.InitializeAsync(app.Services);
