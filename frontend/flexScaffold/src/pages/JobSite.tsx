@@ -1,15 +1,26 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+
 import CoreScaffoldImage from "../assets/svg/ItemGrid/CoreScaffold.svg";
 import { getJobSiteCategoriesById } from "../api/JobSites";
 import BackArrow from "../assets/svg/ItemGrid/BackArrow.svg";
 import { useEffect, useState } from "react";
 import type { JobSiteCategory } from "../types/JobSiteCategory";
 import type { JobSiteItem } from "../types/JobSiteItem";
+import info from "../assets/svg/table/info.svg";
+import check from "../assets/svg/table/checkMark.svg";
 import { getItems } from "../api/Items";
+import type { CreateJobSiteItem } from "../types/CreateItemForJobSite";
+import { getAllItems } from "../api/Items";
+import type { Item } from "../types/Item";
+import { createItemForJobSite } from "../api/Items";
+import toast from "react-hot-toast";
+
 function JobSite() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [categories, setCategories] = useState<JobSiteCategory[]>([]);
-  const [items, setItems] = useState<JobSiteItem[]>([]);
+  const [items, setItems] = useState<JobSiteItem[] | null>(null);
+  const [toggleCreateItem, setToggleCreateItem] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -26,12 +37,26 @@ function JobSite() {
   }, []);
 
   const getItemsByCategoryId = async (categoryId: number) => {
-    const response = await getItems(categoryId);
+    try {
+      const response = await getItems(categoryId);
 
-    setItems(response.data);
+      setItems(response.data);
+    } catch (err) {
+      setItems([]);
+      console.error("Failed to load items:", err);
+    }
   };
+
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   return (
     <div className="container 3xl:max-width-[1920px] mx-auto h-screen p-2.5 grid grid-cols-[20%_1fr] bg-white  gap-2.5">
+      {toggleCreateItem && (
+        <CreateItem
+          setToggleCreateItem={setToggleCreateItem}
+          id={activeCategoryId}
+          setParentItems={setItems}
+        />
+      )}
       <div className="h-[500px]  grid grid-rows-[45px_1fr] gap-2.5 rounded-[10px] shadow overflow-hidden">
         <div className="w-full px-5 flex items-center bg-[#F8F8FA]">
           <p className="openSans font-semibold text-[#323338]">
@@ -40,23 +65,63 @@ function JobSite() {
         </div>
         <div className="w-full flex flex-col bg-white px-2.5  justify-between">
           <div className="w-full flex flex-col gap-2.5">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="w-full h-[32px] flex justify-center items-center bg-[#F8F8FA] rounded-[5px] cursor-pointer"
-                onClick={() => getItemsByCategoryId(category.id)}
-              >
-                <p>{category.category.name}</p>
-              </div>
-            ))}
+            {categories.map((category) => {
+              let bgColor = "#F8F8FA";
+              switch (category.category.id) {
+                case 1:
+                  bgColor = "#67AA3C";
+                  break;
+                case 2:
+                  bgColor = "#EFD652";
+                  break;
+                case 3:
+                  bgColor = "#9640BE";
+                  break;
+                default:
+                  bgColor = "#F8F8FA";
+              }
+              return (
+                <div
+                  key={category.id}
+                  className={`w-full h-[32px] flex justify-center items-center bg-[#F8F8FA] rounded-[5px] cursor-pointer  `}
+                  onClick={() => {
+                    getItemsByCategoryId(category.id);
+                    setActiveCategoryId(category.id);
+                  }}
+                  style={{
+                    backgroundColor:
+                      activeCategoryId === category.id ? bgColor : "#F8F8FA",
+                    color: activeCategoryId === category.id ? "white" : "black",
+                    fontWeight:
+                      activeCategoryId === category.id ? "600" : "400",
+                  }}
+                >
+                  <p>{category.category.name}</p>
+                </div>
+              );
+            })}
           </div>
-          <div className="w-full h-[32px] flex justify-center items-center">
-            <div className="w-[150px] h-full flex bg-[#1264A3] rounded-[5px] mb-5">
+          <div className="w-full h-[32px] flex justify-center items-center gap-2.5">
+            <div
+              className="w-[150px] h-full flex bg-[#1264A3] rounded-[5px] mb-5 cursor-pointer"
+              onClick={() => navigate(-1)}
+            >
               <div className="w-[80%] h-full border-r border-[#0F5C97] flex items-center justify-center">
                 <p className="text-[14px] text-white">Go Back</p>
               </div>
               <div className="w-[20%] h-full flex justify-center items-center">
                 <img src={BackArrow} className="max-w-[17px]" alt="" />
+              </div>
+            </div>
+            <div
+              className="w-[150px] h-full flex bg-[#71CF48] rounded-[5px] mb-5 cursor-pointer"
+              onClick={() => setToggleCreateItem(true)}
+            >
+              <div className="w-[80%] h-full border-r border-[#68C142] flex items-center justify-center">
+                <p className="text-[14px] text-white">Create</p>
+              </div>
+              <div className="w-[20%] h-full flex justify-center items-center">
+                <p className="font-bold text-white text-[28px]">+</p>
               </div>
             </div>
           </div>
@@ -66,7 +131,7 @@ function JobSite() {
         <div className="w-full px-5 flex items-center bg-[#F8F8FA]">
           <p className="openSans font-semibold text-[#323338]">Data Grid</p>
         </div>
-        {items.length === 0 ? (
+        {items === null ? (
           <div className="w-full bg-white flex justify-center items-center flex-col gap-2.5">
             <img src={CoreScaffoldImage} className="max-w-[190px]" alt="" />
             <div className="flex flex-col items-center gap-[2px]">
@@ -104,10 +169,194 @@ function JobSite() {
               </tbody>
             </table>
           </div>
-        )}  
+        )}
       </div>
     </div>
   );
 }
 
 export default JobSite;
+
+function CreateItem({
+  setToggleCreateItem,
+  id,
+  setParentItems,
+}: {
+  setToggleCreateItem: (value: boolean) => void;
+  id?: number | null;
+  setParentItems: React.Dispatch<React.SetStateAction<JobSiteItem[]>>;
+}) {
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    async function fetchAllItems() {
+      try {
+        const data = await getAllItems();
+        console.log(data);
+        setItems(data.data);
+      } catch (err) {
+        console.error("Failed to load all items:", err);
+      }
+    }
+
+    fetchAllItems();
+  }, []);
+
+  const [createdItem, setCreatedItem] = useState<CreateJobSiteItem>({
+    jobSiteCategoryId: id ?? 0,
+    itemId: 0,
+    quantity: 0,
+    description: "",
+    note: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (id === null) {
+        console.error("Job Site Category ID is not set.");
+        return;
+      }
+      if (createdItem.itemId === 0 || createdItem.quantity <= 0) {
+        console.error("Item ID and Quantity must be valid.");
+        return;
+      }
+      await createItemForJobSite(createdItem);
+      console.log("Item created successfully:", createdItem);
+      setToggleCreateItem(false);
+      // Find the selected item object from the items array
+      const selectedItem = items.find((item) => item.id === createdItem.itemId);
+      if (!selectedItem) {
+        console.error("Selected item not found.");
+        return;
+      }
+      setParentItems((prevItems) => [
+        ...prevItems,
+        {
+          id: Math.max(0, ...prevItems.map((i) => i.id)) + 1,
+          item: selectedItem,
+          quantity: createdItem.quantity,
+          description: createdItem.description,
+          note: createdItem.note,
+          jobSiteCategoryId: createdItem.jobSiteCategoryId,
+          itemId: createdItem.itemId,
+          jobSiteCategory: {
+            id: createdItem.jobSiteCategoryId,
+            name: "",
+          },
+        },
+      ]);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.errorMessage || "Error creating item for job site"
+      );
+      console.error("Error creating item for job site:", error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 w-screen h-screen z-20 bg-[#21254B4D] flex justify-center items-center">
+      <div className="w-[868px] h-auto bg-white flex flex-col gap-5 rounded-[10px] shadow-lg overflow-hidden">
+        <div className="w-full h-[45px] bg-[#F8F8FA] flex justify-between px-5 items-center">
+          <p>Title</p>
+          <p
+            className="font-bold text-[20px] cursor-pointer"
+            onClick={() => {
+              setToggleCreateItem(false);
+            }}
+          >
+            X
+          </p>
+        </div>
+        <div className="flex gap-2.5 px-5">
+          <img src={info} alt="" />
+          <p>
+            Informative piece of text that can be used regarding this modal.
+          </p>
+        </div>
+        <form className="flex flex-col gap-2.5 px-5" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-0.5">
+              <label className="openSans text-[14px] font-semibold">
+                Item Name
+              </label>
+              <select className="h-[32px]  bg-[#F5F5F7] placeholder:text-[#E0E0E1] px-3 rounded-md border-none focus:outline-none appearance-none overflow-y-auto">
+                <option value="" disabled selected className="text-[#E0E0E1]">
+                  Select an item
+                </option>
+                {items.map((item, index) => (
+                  <option
+                    key={index}
+                    value={item.id}
+                    onClick={() => {
+                      setCreatedItem({ ...createdItem, itemId: item.id });
+                    }}
+                  >
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="openSans text-[14px] font-semibold">
+                Quantity
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="Enter number"
+                value={createdItem.quantity === 0 ? "" : createdItem.quantity}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setCreatedItem({
+                    ...createdItem,
+                    quantity: value === "" ? 0 : parseInt(value, 10),
+                  });
+                }}
+                className="h-[32px] w-full bg-[#F5F5F7] placeholder:text-[#E0E0E1] px-3 rounded-md border-none focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <label className="openSans text-[14px] font-semibold">
+              Description
+            </label>
+            <textarea
+              placeholder="Type the description..."
+              value={createdItem.description}
+              onChange={(e) =>
+                setCreatedItem({ ...createdItem, description: e.target.value })
+              }
+              className="min-h-[114px] w-full bg-[#F5F5F7] placeholder:text-[#E0E0E1] p-3 rounded-md border-none focus:outline-none resize-none"
+            />
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <label className="openSans text-[14px] font-semibold">Notes</label>
+            <textarea
+              placeholder="Type a note..."
+              value={createdItem.note}
+              onChange={(e) =>
+                setCreatedItem({ ...createdItem, note: e.target.value })
+              }
+              className="min-h-[114px] w-full bg-[#F5F5F7] placeholder:text-[#E0E0E1] p-3 rounded-md border-none  focus:outline-none resize-none"
+            />
+          </div>
+        </form>
+        <div className="mb-5 w-full h-[32px] flex justify-end px-5">
+          <div
+            className="w-[150px] h-full flex bg-[#71CF48] rounded-[5px]  cursor-pointer"
+            onClick={handleSubmit}
+          >
+            <div className="w-[80%] h-full border-r border-[#68C142] flex justify-center items-center text-white">
+              <p>Save Changes</p>
+            </div>
+            <div className="w-[20%] h-full flex items-center justify-center">
+              <img src={check} className="max-w-[14px]" alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

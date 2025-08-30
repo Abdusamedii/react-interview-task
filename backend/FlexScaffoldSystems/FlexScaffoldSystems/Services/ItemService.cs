@@ -36,11 +36,9 @@ public class ItemService
         return new ApiResponse<Item>(true, item, null);
     }
 
-    public async Task<ApiResponse<List<Item>>> GetAll(int pageNumber = 1)
+    public async Task<ApiResponse<List<Item>>> GetAll()
     {
         var Items = await _dbContext.Items.OrderBy(js => js.Name)
-            .Skip((pageNumber - 1) * 20) 
-            .Take(20)
             .ToListAsync();
         if (!Items.Any())
         {

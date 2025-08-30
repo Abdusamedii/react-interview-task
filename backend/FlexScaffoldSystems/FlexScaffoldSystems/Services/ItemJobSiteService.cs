@@ -49,6 +49,13 @@ public class ItemJobSiteService
             {
                 return new ApiResponse<ItemJobSiteCategory>(false, null, "Item quantity is Larger than current stock");
             }
+            
+            var itemJobSiteExists = await _dbContext.ItemJobSiteCategories.AnyAsync(ijsc => ijsc.ItemId == dto.ItemId && ijsc.JobSiteCategoryId == dto.JobSiteCategoryId);
+            if (itemJobSiteExists)
+            {
+                return new ApiResponse<ItemJobSiteCategory>(false, null, "Item job site already exists");
+            }
+
 
             item.Quantity -= dto.Quantity;
             var newJobSiteItem = new ItemJobSiteCategory()

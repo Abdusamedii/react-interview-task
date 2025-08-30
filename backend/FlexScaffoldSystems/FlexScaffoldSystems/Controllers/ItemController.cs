@@ -27,9 +27,9 @@ public class ItemController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetItems(int pageNumber = 1)
+    public async Task<IActionResult> GetItems()
     {
-        var result =await  _itemService.GetAll(pageNumber);
+        var result =await  _itemService.GetAll();
         if (result.Success){ return Ok(result);}
         return BadRequest(result);
     }
