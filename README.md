@@ -45,7 +45,7 @@ Thank you for your interest in my project. This document provides all the necess
 You can view a live, running version of the application and its API at the following addresses:
 
 - **Frontend:** [https://witty-bay-02ad12d03.2.azurestaticapps.net](https://witty-bay-02ad12d03.2.azurestaticapps.net)
-- **Backend API:** [https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/api/[Controller]](https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/api/[Controller])
+- **Backend API:** [https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/swagger/index.html](https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/swagger/index.html)
 
 **Note:** The live database has IP address restrictions for security. To test the live application with full functionality, your IP address must be whitelisted.
 
