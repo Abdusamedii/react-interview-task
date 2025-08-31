@@ -33,4 +33,12 @@ public class ItemJobSiteController : Controller
         if (!result.Success) { return BadRequest(result);}
         return Ok(result);
     }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateItemJobSite([FromBody] UpdateItemJobSiteDto dto)
+    {
+        var result = await _jobSiteService.UpdateItemJobSite(dto);
+        if (!result.Success) { return BadRequest(result); }
+        return Ok(result);
+    }
 }

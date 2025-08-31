@@ -14,3 +14,8 @@ export const createItemForJobSite = async (data) => {
   const res = await client.post("/ItemJobSite", data);
   return res.data;
 }
+
+export const updateItemForJobSite = async (data) => {
+  const res = await client.put("/ItemJobSite", data);
+  return res.data;
+}

@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from "react-router-dom";
-
 import CoreScaffoldImage from "../assets/svg/ItemGrid/CoreScaffold.svg";
 // @ts-ignore
 import { getJobSiteCategoriesById } from "../api/JobSites";
@@ -17,6 +16,9 @@ import { getAllItems } from "../api/Items";
 import type { Item } from "../types/Item";
 // @ts-ignore
 import { createItemForJobSite } from "../api/Items";
+// @ts-ignore
+import { updateItemForJobSite } from "../api/Items";
+import type { UpdateItemJobSiteType } from "../types/UpdateItemJobSite";
 import toast from "react-hot-toast";
 
 function JobSite() {
@@ -25,25 +27,23 @@ function JobSite() {
   const [categories, setCategories] = useState<JobSiteCategory[]>([]);
   const [items, setItems] = useState<JobSiteItem[] | null>(null);
   const [toggleCreateItem, setToggleCreateItem] = useState(false);
+  const [updateItemId, setUpdateItemId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getJobSiteCategoriesById(id);
-
         setCategories(data.data);
       } catch (err) {
         console.error("Failed to load job site categories:", err);
       }
     }
-
     fetchData();
-  }, []);
+  }, [id]);
 
   const getItemsByCategoryId = async (categoryId: number) => {
     try {
       const response = await getItems(categoryId);
-
       setItems(response.data);
     } catch (err) {
       setItems([]);
@@ -53,22 +53,25 @@ function JobSite() {
 
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   return (
-    <div className="container 3xl:max-width-[1920px] mx-auto h-screen p-2.5 grid grid-cols-[20%_1fr] bg-white  gap-2.5">
+    <div className="container 3xl:max-width-[1920px] mx-auto h-screen p-2.5 grid grid-cols-[20%_1fr] bg-white gap-2.5">
       {toggleCreateItem && (
         <CreateItem
           setToggleCreateItem={setToggleCreateItem}
           id={activeCategoryId}
           // @ts-ignore
           setParentItems={setItems}
+          ItemJobSiteID={updateItemId}
+          setUpdateItemId={setUpdateItemId}
+          parentItems={items}
         />
       )}
-      <div className="h-[500px]  grid grid-rows-[45px_1fr] gap-2.5 rounded-[10px] shadow overflow-hidden">
+      <div className="h-[500px] grid grid-rows-[45px_1fr] gap-2.5 rounded-[10px] shadow overflow-hidden">
         <div className="w-full px-5 flex items-center bg-[#F8F8FA]">
           <p className="openSans font-semibold text-[#323338]">
             262 3rd Avenue, New York
           </p>
         </div>
-        <div className="w-full flex flex-col bg-white px-2.5  justify-between">
+        <div className="w-full flex flex-col bg-white px-2.5 justify-between">
           <div className="w-full flex flex-col gap-2.5">
             {categories.map((category) => {
               let bgColor = "#F8F8FA";
@@ -88,17 +91,17 @@ function JobSite() {
               return (
                 <div
                   key={category.id}
-                  className={`w-full h-[32px] flex justify-center items-center bg-[#F8F8FA] rounded-[5px] cursor-pointer  `}
+                  className={`w-full h-[32px] flex justify-center items-center bg-[#F8F8FA] rounded-[5px] cursor-pointer`}
                   onClick={() => {
                     getItemsByCategoryId(category.id);
                     setActiveCategoryId(category.id);
+                    setUpdateItemId(null);
                   }}
                   style={{
                     backgroundColor:
                       activeCategoryId === category.id ? bgColor : "#F8F8FA",
                     color: activeCategoryId === category.id ? "white" : "black",
-                    fontWeight:
-                      activeCategoryId === category.id ? "600" : "400",
+                    fontWeight: activeCategoryId === category.id ? "600" : "400",
                   }}
                 >
                   <p>{category.category.name}</p>
@@ -120,7 +123,10 @@ function JobSite() {
             </div>
             <div
               className="w-[150px] h-full flex bg-[#71CF48] rounded-[5px] mb-5 cursor-pointer"
-              onClick={() => setToggleCreateItem(true)}
+              onClick={() => {
+                setToggleCreateItem(true);
+                setUpdateItemId(null);
+              }}
             >
               <div className="w-[80%] h-full border-r border-[#68C142] flex items-center justify-center">
                 <p className="text-[14px] text-white">Create</p>
@@ -132,7 +138,7 @@ function JobSite() {
           </div>
         </div>
       </div>
-      <div className="h-[500px]  grid grid-rows-[45px_1fr] gap-2.5 rounded-[10px] shadow overflow-hidden">
+      <div className="h-[500px] grid grid-rows-[45px_1fr] gap-2.5 rounded-[10px] shadow overflow-hidden">
         <div className="w-full px-5 flex items-center bg-[#F8F8FA]">
           <p className="openSans font-semibold text-[#323338]">Data Grid</p>
         </div>
@@ -163,6 +169,11 @@ function JobSite() {
                   <tr
                     key={item.id}
                     className={`${idx % 2 === 0 ? "bg-white" : "bg-[#f8f8fa]"}`}
+                    onClick={() => {
+                      setUpdateItemId(item.id);
+                      setToggleCreateItem(true);
+                    }}
+                    style={{ cursor: "pointer" }}
                   >
                     <td className="p-2 openSans">{item.id}</td>
                     <td className="p-2 openSans">{item.item.name}</td>
@@ -186,26 +197,56 @@ function CreateItem({
   setToggleCreateItem,
   id,
   setParentItems,
+  ItemJobSiteID = null,
+  setUpdateItemId,
+  parentItems
 }: {
   setToggleCreateItem: (value: boolean) => void;
   id?: number | null;
-  setParentItems: React.Dispatch<React.SetStateAction<JobSiteItem[]>>;
+  setParentItems: React.Dispatch<React.SetStateAction<JobSiteItem[] | null>>;
+  ItemJobSiteID?: number | null;
+  setUpdateItemId: (value: number | null) => void;
+  parentItems: JobSiteItem[] | null;
 }) {
   const [items, setItems] = useState<Item[]>([]);
+  const [initialItemData, setInitialItemData] = useState<JobSiteItem | null>(null);
 
   useEffect(() => {
     async function fetchAllItems() {
       try {
         const data = await getAllItems();
-        console.log(data);
         setItems(data.data);
       } catch (err) {
         console.error("Failed to load all items:", err);
       }
     }
-
     fetchAllItems();
   }, []);
+
+  useEffect(() => {
+    if (ItemJobSiteID !== null && parentItems) {
+      const itemToUpdate = parentItems.find(item => item.id === ItemJobSiteID);
+      if (itemToUpdate) {
+        setInitialItemData(itemToUpdate);
+        setCreatedItem({
+          jobSiteCategoryId: itemToUpdate.jobSiteCategoryId,
+          itemId: itemToUpdate.itemId,
+          quantity: itemToUpdate.quantity,
+          description: itemToUpdate.description,
+          note: itemToUpdate.note,
+        });
+      }
+    } else {
+      setInitialItemData(null);
+      setCreatedItem({
+        jobSiteCategoryId: id ?? 0,
+        itemId: 0,
+        quantity: 0,
+        description: "",
+        note: "",
+      });
+    }
+  }, [ItemJobSiteID, parentItems, id]);
 
   const [createdItem, setCreatedItem] = useState<CreateJobSiteItem>({
     jobSiteCategoryId: id ?? 0,
@@ -217,46 +258,114 @@ function CreateItem({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (ItemJobSiteID !== null) {
+      handleUpdateItem();
+    } else {
+      handleCreateItem();
+    }
+  };
+
+  const handleCreateItem = async () => {
     try {
       if (id === null) {
-        console.error("Job Site Category ID is not set.");
+        toast.error("Job Site Category ID is not set.");
         return;
       }
       if (createdItem.itemId === 0 || createdItem.quantity <= 0) {
-        console.error("Item ID and Quantity must be valid.");
+        toast.error("Item name and quantity must be valid.");
         return;
       }
-      await createItemForJobSite(createdItem);
-      console.log("Item created successfully:", createdItem);
-      setToggleCreateItem(false);
-      // Find the selected item object from the items array
+      const data = await createItemForJobSite(createdItem);
+      console.log("Item created successfully:", data.data);
+
       const selectedItem = items.find((item) => item.id === createdItem.itemId);
       if (!selectedItem) {
-        console.error("Selected item not found.");
+        toast.error("Selected item not found.");
         return;
       }
-      setParentItems((prevItems) => [
-        ...prevItems,
-        {
-          id: Math.max(0, ...prevItems.map((i) => i.id)) + 1,
-          item: selectedItem,
-          quantity: createdItem.quantity,
-          description: createdItem.description,
-          note: createdItem.note,
-          jobSiteCategoryId: createdItem.jobSiteCategoryId,
-          itemId: createdItem.itemId,
-          jobSiteCategory: {
-            id: createdItem.jobSiteCategoryId,
-            name: "",
+
+      setParentItems((prevItems) => {
+        if (!prevItems) return null;
+        return [
+          ...prevItems,
+          {
+            id: data.data.id,
+            item: selectedItem,
+            quantity: createdItem.quantity,
+            description: createdItem.description,
+            note: createdItem.note,
+            jobSiteCategoryId: createdItem.jobSiteCategoryId,
+            itemId: createdItem.itemId,
+            jobSiteCategory: {
+              id: createdItem.jobSiteCategoryId,
+              name: "",
+            },
           },
-        },
-      ]);
+        ];
+      });
+      setToggleCreateItem(false);
+      setUpdateItemId(null);
+      toast.success("Item created successfully!");
     } catch (error) {
-      toast.error(
-        // @ts-ignore
-        error.response?.data?.errorMessage || "Error creating item for job site"
-      );
+      // @ts-ignore
+      toast.error(error.response?.data?.errorMessage || "Error creating item for job site");
       console.error("Error creating item for job site:", error);
+    }
+  };
+
+  const handleUpdateItem = async () => {
+    try {
+      if (ItemJobSiteID === null) {
+        toast.error("Item Job Site ID is not set for update.");
+        return;
+      }
+      if (createdItem.itemId === 0 || createdItem.quantity <= 0) {
+        toast.error("Item name and quantity must be valid.");
+        return;
+      }
+
+      const updatedItem: UpdateItemJobSiteType = {
+        itemJobSiteId: ItemJobSiteID,
+        jobSiteCategoryId: createdItem.jobSiteCategoryId,
+        itemId: createdItem.itemId,
+        quantity: createdItem.quantity,
+        description: createdItem.description,
+        note: createdItem.note,
+      };
+
+      await updateItemForJobSite(updatedItem);
+      console.log("Item updated successfully:", updatedItem);
+
+      const selectedItem = items.find((item) => item.id === updatedItem.itemId);
+      if (!selectedItem) {
+        toast.error("Selected item not found.");
+        return;
+      }
+
+      setParentItems((prevItems) => {
+        if (!prevItems) return null;
+        const updatedItems = prevItems.map((item) =>
+          item.id === updatedItem.itemJobSiteId
+            ? {
+                ...item,
+                item: selectedItem,
+                quantity: updatedItem.quantity,
+                description: updatedItem.description,
+                note: updatedItem.note,
+                jobSiteCategoryId: updatedItem.jobSiteCategoryId,
+                itemId: updatedItem.itemId,
+              }
+            : item
+        );
+        return updatedItems;
+      });
+      setToggleCreateItem(false);
+      setUpdateItemId(null);
+      toast.success("Item updated successfully!");
+    } catch (error) {
+      // @ts-ignore
+      toast.error(error.response?.data?.errorMessage || "Error updating item for job site");
+      console.error("Error updating item for job site:", error);
     }
   };
 
@@ -269,6 +378,7 @@ function CreateItem({
             className="font-bold text-[20px] cursor-pointer"
             onClick={() => {
               setToggleCreateItem(false);
+              setUpdateItemId(null);
             }}
           >
             X
@@ -286,18 +396,18 @@ function CreateItem({
               <label className="openSans text-[14px] font-semibold">
                 Item Name
               </label>
-              <select className="h-[32px]  bg-[#F5F5F7] placeholder:text-[#E0E0E1] px-3 rounded-md border-none focus:outline-none appearance-none overflow-y-auto">
-                <option value="" disabled selected className="text-[#E0E0E1]">
+              <select
+                className="h-[32px] bg-[#F5F5F7] placeholder:text-[#E0E0E1] px-3 rounded-md border-none focus:outline-none appearance-none overflow-y-auto"
+                value={createdItem.itemId}
+                onChange={(e) =>
+                  setCreatedItem({ ...createdItem, itemId: parseInt(e.target.value, 10) })
+                }
+              >
+                <option value={0} disabled className="text-[#E0E0E1]">
                   Select an item
                 </option>
-                {items.map((item, index) => (
-                  <option
-                    key={index}
-                    value={item.id}
-                    onClick={() => {
-                      setCreatedItem({ ...createdItem, itemId: item.id });
-                    }}
-                  >
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
                     {item.name}
                   </option>
                 ))}
@@ -345,17 +455,17 @@ function CreateItem({
               onChange={(e) =>
                 setCreatedItem({ ...createdItem, note: e.target.value })
               }
-              className="min-h-[114px] w-full bg-[#F5F5F7] placeholder:text-[#E0E0E1] p-3 rounded-md border-none  focus:outline-none resize-none"
+              className="min-h-[114px] w-full bg-[#F5F5F7] placeholder:text-[#E0E0E1] p-3 rounded-md border-none focus:outline-none resize-none"
             />
           </div>
         </form>
         <div className="mb-5 w-full h-[32px] flex justify-end px-5">
           <div
-            className="w-[150px] h-full flex bg-[#71CF48] rounded-[5px]  cursor-pointer"
+            className="w-[150px] h-full flex bg-[#71CF48] rounded-[5px] cursor-pointer"
             onClick={handleSubmit}
           >
             <div className="w-[80%] h-full border-r border-[#68C142] flex justify-center items-center text-white">
-              <p>Save Changes</p>
+              <p>{ItemJobSiteID? "Update":"Save Changes"}</p>
             </div>
             <div className="w-[20%] h-full flex items-center justify-center">
               <img src={check} className="max-w-[14px]" alt="" />

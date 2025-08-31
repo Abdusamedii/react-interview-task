@@ -93,4 +93,119 @@ public class ItemJobSiteService
 
         return ApiResponse<List<ItemJobSiteCategory>>.Ok(items);
     }
+    public async Task<ApiResponse<ItemJobSiteCategory>> UpdateItemJobSite(UpdateItemJobSiteDto dto)
+{
+    var transaction = await _dbContext.Database.BeginTransactionAsync();
+    try
+    {
+        /*Find the ItemJobSite of the Item we want to Update*/
+        var itemJobSite = await _dbContext.ItemJobSiteCategories.FindAsync(dto.ItemJobSiteId);
+
+        /*Check if null*/
+        if (itemJobSite == null)
+            return ApiResponse<ItemJobSiteCategory>.Fail("ItemJobSite not found");
+
+        /*Find the old Item related to this ItemJobSite*/
+        var oldItem = await _dbContext.Items
+            .Where(i => i.Id == itemJobSite.ItemId)
+            .FirstOrDefaultAsync();
+
+        /*Check if old Item exists (safety check)*/
+        if (oldItem == null)
+            return ApiResponse<ItemJobSiteCategory>.Fail("Old item not found");
+
+        /*Check if we are updating to a new ItemId*/
+        if (dto.ItemId != itemJobSite.ItemId)
+        {
+            var anyItemJobSiteIdExists = await _dbContext.ItemJobSiteCategories.AnyAsync(ijsc => ijsc.ItemId == dto.ItemId && ijsc.JobSiteCategoryId == dto.JobSiteCategoryId);
+            if (anyItemJobSiteIdExists)
+            {
+                return new  ApiResponse<ItemJobSiteCategory>(false, null, "This Item arleady exists please edit the Item");
+            }
+            /*Get the new Item we want to assign*/
+            var newItem = await _dbContext.Items
+                .Where(i => i.Id == dto.ItemId)
+                .FirstOrDefaultAsync();
+
+            /*Check if the new Item actually exists*/
+            if (newItem == null)
+                return ApiResponse<ItemJobSiteCategory>.Fail("New item not found");
+
+            /*Check if the new Item has enough stocks for the requested quantity*/
+            if (newItem.Quantity < dto.Quantity)
+            {
+                return new ApiResponse<ItemJobSiteCategory>(
+                    false, null, "New item has quantity of " + newItem.Quantity);
+            }
+
+            /*Check if the requested quantity is valid*/
+            if (dto.Quantity <= 0)
+            {
+                return new ApiResponse<ItemJobSiteCategory>(
+                    false, null, "Quantity must be greater than 0");
+            }
+
+            /*Update the ItemJobSite to point to the new Item*/
+            itemJobSite.ItemId = newItem.Id;
+
+            /*Return the old reserved quantity to the old Item stock*/
+            oldItem.Quantity += itemJobSite.Quantity;
+
+            /*Update ItemJobSite with the new requested quantity*/
+            itemJobSite.Quantity = dto.Quantity;
+
+            /*Subtract the requested quantity from the new Item stock*/
+            newItem.Quantity -= dto.Quantity;
+        }
+        else
+        {
+            /*Case: ItemId is the same, but quantity might change*/
+            if (dto.Quantity != itemJobSite.Quantity)
+            {
+                /*Validate the requested quantity*/
+                if (dto.Quantity <= 0)
+                {
+                    return new ApiResponse<ItemJobSiteCategory>(
+                        false, null, "Item quantity must be greater than 0");
+                }
+
+                /*Return the old quantity back to stock first*/
+                oldItem.Quantity += itemJobSite.Quantity;
+
+                /*Check if enough stocks are available for the new quantity*/
+                if (oldItem.Quantity < dto.Quantity)
+                {
+                    return new ApiResponse<ItemJobSiteCategory>(
+                        false, null, "Not enough stock. Available: " + oldItem.Quantity);
+                }
+
+                /*Reduce stock by new quantity*/
+                oldItem.Quantity -= dto.Quantity;
+
+                /*Update ItemJobSite with the new quantity*/
+                itemJobSite.Quantity = dto.Quantity;
+            }
+        }
+
+        /*Always update metadata fields*/
+        itemJobSite.Note = dto.Note;
+        itemJobSite.Description = dto.Description;
+
+        /*Save changes to DB*/
+        await _dbContext.SaveChangesAsync();
+
+        /*Commit transaction if successful*/
+        await transaction.CommitAsync();
+
+        /*Return success response*/
+        return new ApiResponse<ItemJobSiteCategory>(true, itemJobSite);
+    }
+    catch (Exception e)
+    {
+        /*Rollback if any error occurs*/
+        await transaction.RollbackAsync();
+        return ApiResponse<ItemJobSiteCategory>.Fail("Something went wrong");
+    }
+}
+
 }
