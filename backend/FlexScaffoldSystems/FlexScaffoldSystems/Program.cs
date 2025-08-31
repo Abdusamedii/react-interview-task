@@ -39,13 +39,10 @@ builder.Services.AddDbContext<DbContextConnection>(opt =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwagger();
     app.UseSwaggerUI();
     app.MapOpenApi();
-}
-
 app.UseMiddleware<ApiExceptionMiddleware>();
 
 app.UseHttpsRedirection();
