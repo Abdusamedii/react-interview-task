@@ -43,7 +43,7 @@ Thank you for your interest in my project. This document provides all the necess
 ### Live Demo
 
 You can view a live, running version of the application and its API at the following addresses:
-
+(Note the backend automatically shuts down if not interacted recently, so the Frontend might take some time to work correctly)
 - **Frontend:** [https://witty-bay-02ad12d03.2.azurestaticapps.net](https://witty-bay-02ad12d03.2.azurestaticapps.net)
 - **Backend API:** [https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/swagger/index.html](https://abdusamedscaffoldsystems-ekgfdhfwf7b9h2f4.westeurope-01.azurewebsites.net/swagger/index.html)
 
